@@ -9,6 +9,7 @@ import static com.codeborne.selenide.Selenide.*;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 
 public class FormTest {
@@ -17,15 +18,16 @@ public class FormTest {
     void inputValidDataSuccess() {
         open("http://localhost:9999");
 
-        //создаем переменную с датой на 3 дня вперед текущей
-        LocalDate date = LocalDate.now().plusDays(3);
-        String myDate = String.format("%02d.%02d.%d", date.getDayOfMonth(), date.getMonthValue(), date.getYear());
+        //немного доработал логику
+        String date = LocalDate.now().plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
 
         //Заполняем форму
         $("[data-test-id=city] input").setValue("Нижний Новгород");
         $("[data-test-id=date] input").click();
         $("[data-test-id=date] input").sendKeys(Keys.DELETE);
-        $("[data-test-id=date] input").sendKeys("myDate");
+        //по Вашему комментарию
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.BACK_SPACE);
+        $("[data-test-id=date] input").sendKeys(date);//в торопях не заметил в прошлый раз ""
         $("[data-test-id=name] input").setValue("Маркиз-Деполь");
         $("[data-test-id=phone] input").setValue("+79991234567");
         $("[data-test-id=agreement]").click();
@@ -34,6 +36,6 @@ public class FormTest {
         //Начинается ожидание и далее проверка
         $("[data-test-id=notification]").shouldBe(Condition.visible, Duration.ofSeconds(15));
         $("[data-test-id=notification] .notification__title").should(Condition.exactText("Успешно!"));
-        $("[data-test-id=notification] .notification__content").should(Condition.exactText("Встреча успешно забронирована на " + myDate));
+        $("[data-test-id=notification] .notification__content").should(Condition.exactText("Встреча успешно забронирована на " + date));
     }
 }
